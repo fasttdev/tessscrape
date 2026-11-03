@@ -1,211 +1,204 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pinterest Downloader (Auto-Generated)</title>
-<style>
-  :root {
-    --primary: #e60023; /* Warna khas Pinterest */
-    --primary-hover: #ad081b;
-    --bg-color: #fcfcfc;
-    --text-main: #111;
-    --text-muted: #5f5f5f;
-    --border: #e1e1e1;
-    --card-bg: #fff;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-  body { background: var(--bg-color); color: var(--text-main); line-height: 1.6; }
-  
-  /* Navbar */
-  nav { display: flex; justify-content: space-between; align-items: center; padding: 16px 5%; border-bottom: 1px solid var(--border); background: #fff; }
-  .logo { font-size: 22px; font-weight: 800; color: var(--primary); text-decoration: none; }
-  .nav-links { display: flex; gap: 15px; }
-  .nav-links a { text-decoration: none; color: var(--text-muted); font-weight: 500; font-size: 14px; }
-  .nav-links a:hover { color: var(--primary); }
-
-  /* Hero */
-  header { text-align: center; padding: 60px 5% 40px; background: #fff; border-bottom: 1px solid var(--border); }
-  h1 { font-size: 36px; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.5px; }
-  .subtitle { font-size: 18px; color: var(--text-muted); margin-bottom: 30px; }
-  
-  /* Form Input */
-  .form-wrapper { max-width: 650px; margin: 0 auto; display: flex; gap: 10px; background: #fff; padding: 8px; border: 2px solid var(--border); border-radius: 50px; transition: border-color 0.2s; }
-  .form-wrapper:focus-within { border-color: var(--primary); }
-  .form-wrapper input { flex: 1; border: none; outline: none; padding: 12px 20px; font-size: 16px; border-radius: 50px; background: transparent; }
-  .form-wrapper button { background: var(--primary); color: #fff; border: none; padding: 12px 30px; border-radius: 50px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-  .form-wrapper button:hover { background: var(--primary-hover); }
-  
-  /* Sections */
-  section { padding: 60px 5%; max-width: 1000px; margin: 0 auto; }
-  h2 { font-size: 28px; font-weight: 700; margin-bottom: 20px; text-align: center; letter-spacing: -0.5px; }
-  p { font-size: 16px; color: var(--text-muted); margin-bottom: 16px; text-align: center; }
-
-  /* Grid & Cards (Steps) */
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 30px; }
-  .card { background: var(--card-bg); padding: 24px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-  .card h3 { font-size: 18px; color: var(--primary); margin-bottom: 10px; }
-  .card p { text-align: left; font-size: 14px; margin-bottom: 0; color: var(--text-muted); }
-
-  /* FAQ */
-  .faq-list { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
-  .faq-item { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
-  .faq-item h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--text-main); }
-  .faq-item p { text-align: left; font-size: 14px; margin-bottom: 0; color: var(--text-muted); }
-
-  /* Footer */
-  footer { background: #fff; border-top: 1px solid var(--border); padding: 40px 5%; text-align: center; margin-top: 40px; }
-  .footer-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 20px; margin-bottom: 20px; }
-  .footer-links a { color: var(--text-muted); text-decoration: none; font-size: 14px; }
-  .footer-links a:hover { color: var(--primary); }
-  .copyright { font-size: 12px; color: #999; }
-  
-  /* Alert Toast */
-  #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #333; color: #fff; padding: 12px 24px; border-radius: 30px; font-size: 14px; opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-  #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Pindown Scraped Script</title>
+    <!-- Pakai Bulma CSS biar tampilan mirip aslinya -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <style>
+        body { background: #f5f5f5; padding: 40px; }
+        .container { max-width: 600px; }
+        .alert-box { display: none; margin-bottom: 20px; }
+        .alert-box.active { display: block; }
+        .progress-url { display: none; margin-bottom: 20px; }
+        .progress-url.active { display: block; }
+        #download-section { margin-top: 30px; }
+    </style>
 </head>
 <body>
 
-<div id="app"></div>
-<div id="toast">Pesan</div>
+<div class="container">
+    <h1 class="title has-text-centered">Pinterest Video Downloader (Mock Test)</h1>
+    <h2 class="subtitle has-text-centered">Script diekstrak dari hasil scrape, backend di-mock</h2>
+
+    <!-- Alert Box -->
+    <div class="alert-box notification is-danger is-light">
+        <div id="alert"></div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-url">
+        <progress class="progress is-primary" max="100">Loading...</progress>
+        <p class="has-text-centered">Processing...</p>
+    </div>
+
+    <!-- FORM UTAMA (Sesuai ID yang dicari script) -->
+    <form name="formurl" class="box">
+        <!-- Config rahasia pindown (di-mock biar script ga error) -->
+        <input type="hidden" data-challenge-config='{"retry":"Coba lagi", "invalid":"Link kosong", "invalidHtml":"Masukkan URL", "verification":"Verifikasi gagal", "seedParts":["dummy","seed"]}'>
+        
+        <div class="field">
+            <label class="label">Pinterest Video URL</label>
+            <div class="control">
+                <input class="input" type="text" name="url" id="url" placeholder="https://pin.it/..." required>
+            </div>
+        </div>
+
+        <div class="field">
+            <div class="control">
+                <button class="button is-primary is-fullwidth" type="submit" id="submitBtn">
+                    Download
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- HASIL DOWNLOAD -->
+    <div id="download-section"></div>
+</div>
 
 <script>
-// ==== 1. DATA HASIL SCRAPE DARI LU ====
-const scrapedData = {
-  "result": {
-    "meta": { "title": "Pinterest Video Downloader" },
-    "headings": [
-      { "level": 1, "text": "Pinterest Video Downloader" },
-      { "level": 2, "text": "Pinterest video download 1080p - 2K - 4K. Free. All devices" },
-      { "level": 2, "text": "Why You Should Use Our Pinterest Video Downloader" },
-      { "level": 2, "text": "How to Download Pinterest Video with Pindown.io" },
-      { "level": 3, "text": "1Find Videos" },
-      { "level": 3, "text": "2Paste Video" },
-      { "level": 3, "text": "3Download Video" },
-      { "level": 2, "text": "PinDown.io - Best Pinterest Video Downloader" },
-      { "level": 2, "text": "Frequently Asked Questions" },
-      { "level": 3, "text": "How to download video from Pinterest?" },
-      { "level": 3, "text": "What makes PinDown.io the best Pinterest downloader?" },
-      { "level": 3, "text": "Can I save Pinterest videos on my phone?" },
-      { "level": 3, "text": "Do I need a Pinterest downloader app to save videos?" }
-    ],
-    "paragraphs": [
-      "From Pinterest, Copy the Pinterest video URL by clicking Share and choosing Copy Video URL.",
-      "Paste the Pinterest video URL in the box above and hit the Download button.",
-      "Click on the video quality that you want to download (SD or HD or 1080).",
-      "PinDown.io is the best Pinterest video downloader to help you download high quality Pinterest video in Full HD, 2K, 4K without watermark.",
-      "Download Pinterest video to your phone, PC, or tablet with highest quality. Use our Pinterest video downloader with your browser. No need to install any software. Support both Android, and iOS.",
-      "Easy to use. Multiple download options, with a lot of different formats: 144p, 240p, 360p, 720p HD, 1080p, FULL HD or 4K.",
-      "Just copy the video link from Pinterest, paste it into the box on PinDown.io, and download the file in MP4, HD, or 4K.",
-      "No. You don’t need to install any Pinterest downloader app. PinDown.io works directly in your browser."
-    ],
-    "links": [
-      { "url": "https://pindown.io/about-us", "text": "About Us" },
-      { "url": "https://pindown.io/privacy-policy.html", "text": "Privacy Policy" },
-      { "url": "https://pindown.io/terms-of-service.html", "text": "Terms of Service" },
-      { "url": "https://pindown.io/blog", "text": "Blog" },
-      { "url": "https://tmate.cc/", "text": "TikTok Downloader" }
-    ]
-  }
-};
-
-// ==== 2. ENGINE RENDERER ====
-const data = scrapedData.result;
-const app = document.getElementById('app');
-
-// Helper untuk ambil teks berdasarkan level & index
-const getH2 = (idx) => data.headings.filter(h => h.level === 2)[idx]?.text || '';
-const getH3 = () => data.headings.filter(h => h.level === 3).map(h => h.text);
-const getP = (idx) => data.paragraphs[idx] || '';
-
-// Pisahkan H3 jadi Steps (awal angka) dan FAQ (tanya)
-const allH3 = getH3();
-const steps = allH3.filter(t => /^\d/.test(t));
-const faqs = allH3.filter(t => t.includes('?'));
-
-// Render
-app.innerHTML = `
-  <nav>
-    <a href="#" class="logo">PinDown Clone</a>
-    <div class="nav-links">
-      ${data.links.filter(l => l.text === 'About Us' || l.text === 'Blog').map(l => 
-        `<a href="${l.url}" target="_blank">${l.text}</a>`
-      ).join('')}
-    </div>
-  </nav>
-
-  <header>
-    <h1>${data.headings[0].text}</h1>
-    <div class="subtitle">${getH2(0)}</div>
+    // ==========================================
+    // 1. MOCK BACKEND (Bypass API Pindown)
+    // ==========================================
+    // Karena script asli manggil /api/token dan /action, kita bajak fetch-nya.
     
-    <div class="form-wrapper">
-      <input type="text" id="urlInput" placeholder="Paste Pinterest video URL here...">
-      <button onclick="handleDownload()">Download</button>
-    </div>
-  </header>
+    window.requestExtraction = async function(url, formData, config) {
+        // Simulasi loading 1.5 detik
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                if (url.includes("error")) {
+                    resolve({ error: true, message: "Mock Error: URL tidak valid!" });
+                } else {
+                    resolve({
+                        success: true,
+                        html: `
+                            <div class="box" style="border-left: 5px solid #48c774;">
+                                <h3 class="title is-5">✅ Mock Extraction Success</h3>
+                                <p class="mb-3">URL: <strong>${url}</strong></p>
+                                <a href="https://example.com/video.mp4" class="button is-success is-small" target="_blank">
+                                    Save Video (Mock)
+                                </a>
+                            </div>
+                        `
+                    });
+                }
+            }, 1500);
+        });
+    };
 
-  <section>
-    <h2>${getH2(1)}</h2>
-    <p>${getP(3)}</p>
-    <p>${getP(4)}</p>
-  </section>
+    // ==========================================
+    // 2. SCRIPT ASLI DARI HASIL SCRAPE
+    // ==========================================
+    // Gua ambil logika inti dari "script.js?v=1.6" yang lu scrape.
+    
+    document.addEventListener("DOMContentLoaded", function(){
+        var e = document.forms.namedItem("formurl"),
+            t = document.querySelector(".progress-url"),
+            n = document.getElementById("dlModal"),
+            a = document.getElementById("closeModalBtn"),
+            r = document.getElementById("ads_modal"),
+            o = document.getElementById("ad-content"),
+            s = document.body,
+            i = document.querySelector("#alert"),
+            l = document.querySelector(".alert-box");
+            
+        const c = document.getElementById("url"),
+            d = document.getElementById("paste"),
+            u = document.getElementById("clear");
+            
+        let f = !1, p = null, y = 0;
 
-  <section>
-    <h2>${getH2(2)}</h2>
-    <div class="grid">
-      ${steps.map((step, i) => `
-        <div class="card">
-          <h3>${step}</h3>
-          <p>${getP(i)}</p>
-        </div>
-      `).join('')}
-    </div>
-  </section>
+        function m(){ 
+            if(n) n.style.display = "none"; 
+            s.classList.remove("modal-open"); 
+            if(r) r.innerHTML = ""; 
+            if(o) o.style.minHeight = "280px"; 
+        }
 
-  <section>
-    <h2>${getH2(4)}</h2>
-    <div class="faq-list">
-      ${faqs.map((faq, i) => `
-        <div class="faq-item">
-          <h3>${faq}</h3>
-          <p>${getP(i + 5)}</p>
-        </div>
-      `).join('')}
-    </div>
-  </section>
+        window.pushAlert = function(e){
+            if(t) t.classList.remove("active");
+            if(l) l.classList.add("active");
+            if(i) i.innerHTML = e;
+        };
 
-  <footer>
-    <div class="footer-links">
-      ${data.links.map(l => `<a href="${l.url}" target="_blank">${l.text}</a>`).join('')}
-    </div>
-    <div class="copyright">&copy; 2026 - UI Rebuilt by FASTSCRAPE Engine</div>
-  </footer>
-`;
+        window.hiddenAlert = function(){
+            if(l) l.classList.remove("active");
+            if(i) i.innerHTML = "";
+        };
 
-// ==== 3. FUNGSI TOMBOL JALAN ====
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
-}
+        if(e && t) {
+            e.addEventListener("submit", async function(n){
+                n.preventDefault();
+                if(f) return;
 
-window.handleDownload = function() {
-  const url = document.getElementById('urlInput').value.trim();
-  if (!url) {
-    showToast("❌ Masukkan URL Pinterest terlebih dahulu!");
-    document.getElementById('urlInput').focus();
-    return;
-  }
-  
-  // Simulasi proses
-  showToast("⏳ Memproses URL: " + url.substring(0, 30) + "...");
-  
-  setTimeout(() => {
-    showToast("✅ UI berjalan! (Catatan: Backend download asli tidak ikut ter-scrape)");
-  }, 1500);
-};
+                // Ambil config dari hidden input
+                const a = JSON.parse(e.querySelector("[data-challenge-config]").value);
+                a.lang = e.elements.namedItem("lang") ? e.elements.namedItem("lang").value : "en";
+                
+                var r = e.url.value.trim();
+                if("" === r) return void pushAlert(a.invalid);
+
+                var o = new FormData(e);
+                o.set("url", r);
+                y++;
+                p = null;
+
+                const s = Array.from(e.elements).map(e => [e, e.disabled]);
+
+                function handleResponse(e) {
+                    if(e.error) {
+                        pushAlert(e.message || a.retry);
+                    } else if(e.success && e.html) {
+                        var t = document.getElementById("download-section");
+                        t.innerHTML = e.html;
+                    } else {
+                        pushAlert(a.retry);
+                    }
+                }
+
+                f = !0;
+                s.forEach(([el]) => { el.disabled = !0; });
+                hiddenAlert();
+                t.classList.add("active");
+
+                try {
+                    // Panggil function mock yang udah kita buat di atas
+                    const response = await window.requestExtraction(r, o, a);
+                    handleResponse(response);
+                } catch(err) {
+                    pushAlert(a.retry);
+                } finally {
+                    t.classList.remove("active");
+                    s.forEach(([el, disabled]) => { el.disabled = disabled; });
+                    f = !1;
+                }
+            });
+        }
+
+        // Logic untuk tombol close modal
+        if(a) a.onclick = function(){ m(); };
+        window.onclick = function(e){ if(e.target === n) m(); };
+
+        // Logic Accordion (FAQ)
+        var w = document.querySelectorAll(".accordion .card-header");
+        w.forEach(e => {
+            e.addEventListener("click", function(){
+                var e = this.nextElementSibling;
+                if(e.classList.contains("show")){
+                    e.classList.remove("show");
+                    this.classList.remove("active");
+                } else {
+                    document.querySelectorAll(".accordion .collapse").forEach(e => e.classList.remove("show"));
+                    w.forEach(e => e.classList.remove("active"));
+                    e.classList.add("show");
+                    this.classList.add("active");
+                }
+            });
+        });
+    });
 </script>
+
 </body>
 </html>
