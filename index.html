@@ -20,24 +20,25 @@
 
 <div class="container">
     <h1 class="title has-text-centered">Pinterest Video Downloader (Mock Test)</h1>
-    <h2 class="subtitle has-text-centered">Script diekstrak dari hasil scrape, backend di-mock</h2>
+    <h2 class="subtitle has-text-centered">Script asli hasil scrape, API di-mock</h2>
 
-    <!-- Alert Box -->
     <div class="alert-box notification is-danger is-light">
         <div id="alert"></div>
     </div>
 
-    <!-- Progress -->
     <div class="progress-url">
         <progress class="progress is-primary" max="100">Loading...</progress>
         <p class="has-text-centered">Processing...</p>
     </div>
 
-    <!-- FORM UTAMA (Sesuai ID yang dicari script) -->
+    <!-- FORM UTAMA -->
     <form name="formurl" class="box">
-        <!-- Config rahasia pindown (di-mock biar script ga error) -->
-        <input type="hidden" data-challenge-config='{"retry":"Coba lagi", "invalid":"Link kosong", "invalidHtml":"Masukkan URL", "verification":"Verifikasi gagal", "seedParts":["dummy","seed"]}'>
+        <!-- FIX 1: Atribut value harus ada isinya -->
+        <input type="hidden" data-challenge-config='{"retry":"Coba lagi", "invalid":"Link kosong", "invalidHtml":"Masukkan URL", "verification":"Verifikasi gagal", "seedParts":["dummy","seed"]}' value='{"retry":"Coba lagi", "invalid":"Link kosong", "invalidHtml":"Masukkan URL", "verification":"Verifikasi gagal", "seedParts":["dummy","seed"]}'>
         
+        <!-- FIX 2: Script butuh elemen bernama 'lang' -->
+        <input type="hidden" name="lang" value="en">
+
         <div class="field">
             <label class="label">Pinterest Video URL</label>
             <div class="control">
@@ -47,157 +48,66 @@
 
         <div class="field">
             <div class="control">
-                <button class="button is-primary is-fullwidth" type="submit" id="submitBtn">
+                <button class="button is-primary is-fullwidth" type="submit">
                     Download
                 </button>
             </div>
         </div>
     </form>
 
+    <!-- Elemen Modal yang dibutuhkan script -->
+    <div id="dlModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:999;">
+        <div class="box" style="max-width:500px; width:90%;">
+            <div id="ads_modal"></div>
+            <div id="ad-content"></div>
+            <button class="button is-danger mt-4" id="closeModalBtn">Close</button>
+        </div>
+    </div>
+
     <!-- HASIL DOWNLOAD -->
     <div id="download-section"></div>
 </div>
 
+<!-- ========================================== -->
+<!-- 1. SCRIPT ASLI DARI HASIL SCRAPE LU -->
+<!-- ========================================== -->
 <script>
-    // ==========================================
-    // 1. MOCK BACKEND (Bypass API Pindown)
-    // ==========================================
-    // Karena script asli manggil /api/token dan /action, kita bajak fetch-nya.
+    async function requestChallenge(e,t,n=""){const a={url:e};n&&(a.mode=n);const r=await fetch("/api/token",{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json","X-Requested-With":"XMLHttpRequest","X-Form-Language":t.lang},credentials:"same-origin",cache:"no-store",body:JSON.stringify(a)}),o=await r.json();if(!r.ok){const e=new Error(t.retry);throw 422===r.status&&o.error_code&&o.message&&(e.response=o),e}if(!/^[a-f0-9]{24}$/.test(o.id)||"string"!=typeof o.p)throw new Error(t.retry);return o}async function decryptChallenge(e,t,n){if(!/^[a-f0-9]{24}$/.test(e)||"string"!=typeof t||t.length>4096)throw new Error(n.retry);const a=Uint8Array.from(atob(t),e=>e.charCodeAt(0));if(a.length<32||a.length%16!=0)throw new Error(n.retry);
+    const r=n.seedParts.join(""),o=await crypto.subtle.digest("SHA-256",(new TextEncoder).encode(r+":"+e)),s=await crypto.subtle.importKey("raw",o,"AES-CBC",!1,["decrypt"]),i=await crypto.subtle.decrypt({name:"AES-CBC",iv:a.slice(0,16)},s,a.slice(16));return JSON.parse(new TextDecoder("utf-8",{fatal:!0}).decode(i))}function solveChallenge(e){if(!e||"object"!=typeof e||Array.isArray(e)||!Number.isInteger(e._e)||e._e<1e9||e._e>9999999999||"string"!=typeof e._h||!/^[a-f0-9]{64}$/.test(e._h))throw new Error("Invalid challenge");function t(e,t=0,n=1023){if(!Number.isInteger(e)||e<t||e>n)throw new Error("Invalid challenge");return e}let n;switch(e.t){case"r":if(!Array.isArray(e.n)||e.n.length<1||e.n.length>10)throw new Error("Invalid challenge");n=2*e.n.reduce((e,n)=>e+t(n),0)+1;break;case"b":n=(t(e.a)^t(e.b))>>t(e.shift,0,7)&255;break;case"c":if("string"!=typeof e.word||!/^[\x20-\x7e]{1,64}$/.test(e.word))throw new Error("Invalid challenge");n=e.word.charCodeAt(t(e.index,0,e.word.length-1))*t(e.multiplier,1,9);break;case"m":n=(t(e.a)+t(e.b))%100*t(e.multiplier,1,9);break;case"n":{const a=t(e.a),r=t(e.b),o=t(e.c);n=a*r+r*o+o*a-a;break}default:throw new Error("Invalid challenge")}if(!Number.isSafeInteger(n))throw new Error("Invalid challenge");return n}async function buildVerifyHeader(e,t,n){const a=await decryptChallenge(e,t,n);return e+":"+solveChallenge(a)+":"+a._e+":"+a._h}async function requestExtraction(e,t,n){for(let a=0;a<2;a++){const r=await requestChallenge(e,n,t.get("mode")||""),o=await buildVerifyHeader(r.id,r.p,n),s=await fetch("/action",{method:"POST",headers:{Accept:"application/json","X-Requested-With":"XMLHttpRequest","X-Verify":o},credentials:"same-origin",cache:"no-store",body:t});if(403===s.status){if(0===a)continue;const e=new Error(n.verification);throw e.verification=!0,e}return s.json()}}
     
+    document.addEventListener("DOMContentLoaded",function(){var e=document.forms.namedItem("formurl"),t=document.querySelector(".progress-url"),n=document.getElementById("dlModal"),a=document.getElementById("closeModalBtn"),r=document.getElementById("ads_modal"),o=document.getElementById("ad-content"),s=document.body,i=document.querySelector("#alert"),l=document.querySelector(".alert-box");const c=document.getElementById("url"),d=document.getElementById("paste"),u=document.getElementById("clear");let f=!1,p=null,y=0;function m(){n.style.display="none",s.classList.remove("modal-open"),r.innerHTML="",o.style.minHeight="280px"}window.pushAlert=function(e){t.classList.remove("active"),l.classList.add("active"),i.innerHTML=e},window.hiddenAlert=function(){l.classList.remove("active"),i.innerHTML=""},e&&t&&e.addEventListener("submit",async function(n){if(n.preventDefault(),f)return;const a=JSON.parse(e.querySelector("[data-challenge-config]").value);a.lang=e.elements.namedItem("lang").value;var r=e.url.value.trim();if(""===r)return void pushAlert(e.elements.namedItem("mode")?a.invalidHtml:a.invalid);var o=new FormData(e);o.set("url",r),y++,p=null;const s=Array.from(e.elements).map(e=>[e,e.disabled]);function i(e){if(e.error)e.error_code&&"function"==typeof gtag&&gtag("event",e.error_code,{event_category:"Downloads",value:1}),pushAlert(e.message||a.retry);else if(e.success&&e.html){"function"==typeof gtag&&gtag("event","success",{event_category:"Downloads",value:1});var t=document.getElementById("download-section");t.innerHTML=e.html,e.collection&&(p={url:r,config:{...a},pages:[e],index:0,busy:!1});var n=document.getElementById("inputData");n&&n.remove(),t.querySelector(".multipin-results")&&window.showAd()}else pushAlert(a.retry)}f=!0,s.forEach(([e])=>{e.disabled=!0}),hiddenAlert(),t.classList.add("active");try{i(await requestExtraction(r,o,a))}catch(e){e.response?i(e.response):pushAlert(e.verification?a.verification:a.retry)}finally{t.classList.remove("active"),s.forEach(([e,t])=>{e.disabled=t}),f=!1}}),document.addEventListener("click",async function(e){const t=e.target.closest?e.target.closest("[data-feed-direction]"):null;if(!t||t.disabled||!p||p.busy||f)return;const n=p,a=y,r=n.index+("next"===t.dataset.feedDirection?1:-1);if(r<0)return;const o=document.getElementById("download-section"),s=n.pages[n.index].collection.cursor;if(!n.pages[r]&&!s)return;n.busy=!0;const i=Array.from(o.querySelectorAll("[data-feed-direction]")).map(e=>[e,e.disabled]);i.forEach(([e])=>{e.disabled=!0}),t.classList.add("is-loading"),t.setAttribute("aria-busy","true");const l=o.querySelector(".feed-error");l&&(l.hidden=!0);try{let e=n.pages[r];if(!e){const t=new FormData;if(t.set("url",n.url),t.set("lang",n.config.lang),t.set("cursor",s),e=await requestExtraction(n.url,t,n.config),!e.success||!e.html||!e.collection||e.collection.page!==r+1)throw new Error(e.message||n.config.retry)}if(a!==y||n!==p)return;n.pages[r]=e,n.index=r,o.innerHTML=e.html,o.querySelector(".multipin-header")?.scrollIntoView({block:"start",behavior:"smooth"})}catch(e){a===y&&n===p&&l&&(l.textContent=e.message||n.config.retry,l.hidden=!1)}finally{n.busy=!1,t.classList.remove("is-loading"),t.removeAttribute("aria-busy"),i.forEach(([e,t])=>{e.disabled=t})}}),window.showAd=function(e=""){"function"==typeof gtag&&gtag("event","download_click",{event_category:"Downloads",value:1}),s.classList.add("modal-open"),n.style.display="flex",""===e?(r.innerHTML='<ins class="adsbygoogle"\n        style="display:block"\n        data-ad-client="ca-pub-8531730509933184"\n        data-ad-slot="7744318838"\n        data-ad-format="auto"\n        data-full-width-responsive="true"></ins>',(adsbygoogle=window.adsbygoogle||[]).push({})):(r.innerHTML=e,o.style.minHeight="unset")},a&&(a.onclick=function(){m()}),window.onclick=function(e){e.target===n&&m()};var h=[].slice.call(document.querySelectorAll("video.lazy"));if("IntersectionObserver"in window){var g=new IntersectionObserver(function(e,t){e.forEach(function(e){e.isIntersecting&&(Array.from(e.target.children).forEach(function(e){"SOURCE"===e.tagName&&(e.src=e.dataset.src)}),e.target.load(),e.target.classList.remove("lazy"),g.unobserve(e.target))})});h.forEach(function(e){g.observe(e)})}if(document.querySelectorAll(".video.lazy").forEach(e=>{e.addEventListener("mouseover",function(){this.currentTime=0,this.play()}),e.addEventListener("mouseout",function(){this.pause()}),e.addEventListener("touchstart",function(){this.currentTime=0,this.play()}),e.addEventListener("touchend",function(){this.pause()})}),c){navigator.clipboard&&d&&(d.style.display="flex"),window.onPaste=function(){f||navigator.clipboard&&d&&u&&navigator.clipboard.readText().then(function(e){f||(""!==e?(c.value=e,d.style.display="none",u.style.display="flex"):pushAlert("Link is empty"))})},window.onClear=function(){f||(c.value="",navigator.clipboard&&d&&(d.style.display="flex"),u&&(u.style.display="none"))},c.addEventListener("keyup",function(){c.value.length>0?(d&&(d.style.display="none"),u&&(u.style.display="flex")):(navigator.clipboard&&d&&(d.style.display="flex"),u&&(u.style.display="none")),hiddenAlert()})}var w=document.querySelectorAll(".accordion .card-header");w.forEach(e=>{e.addEventListener("click",function(){var e=this.nextElementSibling;e.classList.contains("show")?(e.classList.remove("show"),this.classList.remove("active")):(document.querySelectorAll(".accordion .collapse").forEach(e=>e.classList.remove("show")),w.forEach(e=>e.classList.remove("active")),e.classList.add("show"),this.classList.add("active"))})})});
+</script>
+
+<!-- ========================================== -->
+<!-- 2. MOCK OVERRIDE (Biar Nggak Error 404) -->
+<!-- ========================================== -->
+<script>
+    // Kita timpa fungsi requestExtraction aslinya pake mock ini
     window.requestExtraction = async function(url, formData, config) {
+        console.log("Mock API ditembak untuk URL:", url);
+        
         // Simulasi loading 1.5 detik
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                if (url.includes("error")) {
-                    resolve({ error: true, message: "Mock Error: URL tidak valid!" });
-                } else {
-                    resolve({
-                        success: true,
-                        html: `
-                            <div class="box" style="border-left: 5px solid #48c774;">
-                                <h3 class="title is-5">✅ Mock Extraction Success</h3>
-                                <p class="mb-3">URL: <strong>${url}</strong></p>
-                                <a href="https://example.com/video.mp4" class="button is-success is-small" target="_blank">
-                                    Save Video (Mock)
-                                </a>
-                            </div>
-                        `
-                    });
-                }
-            }, 1500);
-        });
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        if (url.includes("error")) {
+            return { error: true, message: "Mock Error: URL mengandung kata 'error'" };
+        }
+
+        // Kembalikan HTML palsu seolah-olah sukses
+        return {
+            success: true,
+            html: `
+                <div class="box" style="border-left: 5px solid #48c774;">
+                    <h3 class="title is-5">✅ Mock Extraction Success</h3>
+                    <p class="mb-3">URL yang lu masukin: <strong>${url}</strong></p>
+                    <p class="mb-3">Ini membuktikan script asli dari pindown berhasil dieksekusi dan ngirim request ke mock API.</p>
+                    <a href="#" class="button is-success is-small" onclick="alert('Ini cuma tombol palsu, video aslinya nggak ada.')">
+                        Save Video (Mock)
+                    </a>
+                </div>
+            `
+        };
     };
-
-    // ==========================================
-    // 2. SCRIPT ASLI DARI HASIL SCRAPE
-    // ==========================================
-    // Gua ambil logika inti dari "script.js?v=1.6" yang lu scrape.
-    
-    document.addEventListener("DOMContentLoaded", function(){
-        var e = document.forms.namedItem("formurl"),
-            t = document.querySelector(".progress-url"),
-            n = document.getElementById("dlModal"),
-            a = document.getElementById("closeModalBtn"),
-            r = document.getElementById("ads_modal"),
-            o = document.getElementById("ad-content"),
-            s = document.body,
-            i = document.querySelector("#alert"),
-            l = document.querySelector(".alert-box");
-            
-        const c = document.getElementById("url"),
-            d = document.getElementById("paste"),
-            u = document.getElementById("clear");
-            
-        let f = !1, p = null, y = 0;
-
-        function m(){ 
-            if(n) n.style.display = "none"; 
-            s.classList.remove("modal-open"); 
-            if(r) r.innerHTML = ""; 
-            if(o) o.style.minHeight = "280px"; 
-        }
-
-        window.pushAlert = function(e){
-            if(t) t.classList.remove("active");
-            if(l) l.classList.add("active");
-            if(i) i.innerHTML = e;
-        };
-
-        window.hiddenAlert = function(){
-            if(l) l.classList.remove("active");
-            if(i) i.innerHTML = "";
-        };
-
-        if(e && t) {
-            e.addEventListener("submit", async function(n){
-                n.preventDefault();
-                if(f) return;
-
-                // Ambil config dari hidden input
-                const a = JSON.parse(e.querySelector("[data-challenge-config]").value);
-                a.lang = e.elements.namedItem("lang") ? e.elements.namedItem("lang").value : "en";
-                
-                var r = e.url.value.trim();
-                if("" === r) return void pushAlert(a.invalid);
-
-                var o = new FormData(e);
-                o.set("url", r);
-                y++;
-                p = null;
-
-                const s = Array.from(e.elements).map(e => [e, e.disabled]);
-
-                function handleResponse(e) {
-                    if(e.error) {
-                        pushAlert(e.message || a.retry);
-                    } else if(e.success && e.html) {
-                        var t = document.getElementById("download-section");
-                        t.innerHTML = e.html;
-                    } else {
-                        pushAlert(a.retry);
-                    }
-                }
-
-                f = !0;
-                s.forEach(([el]) => { el.disabled = !0; });
-                hiddenAlert();
-                t.classList.add("active");
-
-                try {
-                    // Panggil function mock yang udah kita buat di atas
-                    const response = await window.requestExtraction(r, o, a);
-                    handleResponse(response);
-                } catch(err) {
-                    pushAlert(a.retry);
-                } finally {
-                    t.classList.remove("active");
-                    s.forEach(([el, disabled]) => { el.disabled = disabled; });
-                    f = !1;
-                }
-            });
-        }
-
-        // Logic untuk tombol close modal
-        if(a) a.onclick = function(){ m(); };
-        window.onclick = function(e){ if(e.target === n) m(); };
-
-        // Logic Accordion (FAQ)
-        var w = document.querySelectorAll(".accordion .card-header");
-        w.forEach(e => {
-            e.addEventListener("click", function(){
-                var e = this.nextElementSibling;
-                if(e.classList.contains("show")){
-                    e.classList.remove("show");
-                    this.classList.remove("active");
-                } else {
-                    document.querySelectorAll(".accordion .collapse").forEach(e => e.classList.remove("show"));
-                    w.forEach(e => e.classList.remove("active"));
-                    e.classList.add("show");
-                    this.classList.add("active");
-                }
-            });
-        });
-    });
 </script>
 
 </body>
