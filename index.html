@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Scraped Data Viewer — pindown.io</title>
+<style>
+  :root {
+    --bg-1: #e8edf5;
+    --bg-2: #d3dceb;
+    --blue-800: #1e40af;
+    --blue-700: #2563eb;
+    --blue-500: #60a5fa;
+    --blue-100: #dbeafe;
+    --gray-900: #1f2937;
+    --gray-700: #4b5563;
+    --gray-600: #6b7280;
+    --gray-500: #9ca3af;
+    --gray-300: #e5e7eb;
+    --gray-200: #f3f4f6;
+    --white: #fff;
+    --shadow: 10px 10px 24px rgba(100,116,139,0.18), -8px -8px 20px rgba(255,255,255,0.9);
+    --radius: 20px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: var(--font);
+    background: linear-gradient(160deg, var(--bg-1), var(--bg-2));
+    background-attachment: fixed;
+    min-height: 100vh;
+    color: var(--gray-900);
+    -webkit-font-smoothing: antialiased;
+    padding: 16px 16px 32px;
+    line-height: 1.5;
+  }
+  .app { max-width: 800px; margin: 0 auto; }
+
+  .app-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 16px; padding: 16px;
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255,255,255,0.75);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .logo {
+    width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0;
+    background: linear-gradient(145deg, var(--blue-500), var(--blue-700));
+    color: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 17px; letter-spacing: 0.5px;
+  }
+  .app-header h1 { font-size: 17px; font-weight: 800; line-height: 1.2; }
+  .app-header p { font-size: 12px; color: var(--gray-600); margin-top: 2px; word-break: break-all; }
+
+  .stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+    gap: 8px; margin-bottom: 16px;
+  }
+  .stat {
+    padding: 12px 8px; text-align: center;
+    background: var(--white); border-radius: 14px; box-shadow: var(--shadow);
+  }
+  .stat b { display: block; font-size: 20px; color: var(--blue-800); line-height: 1; }
+  .stat span { font-size: 10px; color: var(--gray-600); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .tabs {
+    display: flex; gap: 6px; overflow-x: auto;
+    margin-bottom: 16px; padding-bottom: 6px;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    padding: 9px 14px; border-radius: 999px;
+    background: rgba(255,255,255,0.7);
+    border: 1px solid rgba(255,255,255,0.9);
+    color: var(--gray-700); font-size: 13px; font-weight: 600;
+    cursor: pointer; white-space: nowrap; flex-shrink: 0;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .tab:hover { background: var(--white); }
+  .tab.active {
+    background: linear-gradient(145deg, var(--blue-500), var(--blue-700));
+    color: var(--white); border-color: transparent;
+  }
+
+  .content {
+    background: rgba(255,255,255,0.75);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255,255,255,0.9);
+    border-radius: var(--radius);
+    padding: 20px; box-shadow: var(--shadow);
+    min-height: 200px;
+  }
+
+  .kv { display: flex; flex-direction: column; gap: 0; }
+  .row {
+    display: flex; flex-direction: column; gap: 3px;
+    padding: 12px 0; border-bottom: 1px solid var(--gray-200);
+  }
+  .row:last-child { border-bottom: none; }
+  .row .k {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--gray-500);
+  }
+  .row .v {
+    font-size: 14px; color: var(--gray-900);
+    word-break: break-word; overflow-wrap: anywhere;
+  }
+  .row .v a { color: var(--blue-700); text-decoration: none; }
+  .row .v a:hover { text-decoration: underline; }
+
+  .item {
+    padding: 10px 12px; background: var(--gray-200);
+    border-radius: 12px; margin-bottom: 6px;
+    font-size: 13px; color: var(--gray-700); line-height: 1.5;
+    word-break: break-word; overflow-wrap: anywhere;
+  }
+  .item a { color: var(--blue-700); text-decoration: none; }
+  .item a:hover { text-decoration: underline; }
+  .badge {
+    display: inline-block; font-size: 10px; font-weight: 800;
+    background: var(--blue-100); color: var(--blue-800);
+    padding: 2px 6px; border-radius: 6px; margin-right: 6px;
+    text-transform: uppercase; letter-spacing: 0.3px;
+  }
+
+  pre {
+    background: #1f2937; color: #e5e7eb;
+    padding: 14px; border-radius: 12px;
+    font-size: 11px; line-height: 1.5;
+    overflow-x: auto; max-height: 520px; overflow-y: auto;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+  }
+  .empty {
+    padding: 30px 10px; text-align: center;
+    color: var(--gray-500); font-size: 13px; font-weight: 600;
+  }
+  .section-title {
+    font-size: 13px; font-weight: 800; color: var(--blue-800);
+    margin-bottom: 10px; margin-top: 4px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .section-title:not(:first-child) { margin-top: 20px; }
+
+  @media (min-width: 500px) {
+    .row { flex-direction: row; justify-content: space-between; gap: 16px; }
+    .row .k { flex-shrink: 0; padding-top: 2px; }
+    .row .v { text-align: right; max-width: 68%; }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div class="logo">JS</div>
+      <div style="min-width:0;">
+        <h1>Scraped Data Viewer</h1>
+        <p id="subtitle">Memuat data...</p>
+      </div>
+    </header>
+
+    <div class="stats" id="stats"></div>
+
+    <nav class="tabs" id="tabs"></nav>
+
+    <main class="content" id="content"></main>
+  </div>
+
+  <!-- ==== DATA DARI FILE .JS ==== -->
+  <script>
+  const scrapedData = {
+  "creator": "FortechDev",
+  "engine": "fastscrape-axios",
+  "time": "959ms",
+  "status": true,
+  "proxyUsed": "45.38.107.97:6014",
+  "attempts": [
+    { "proxy": "45.38.107.97:6014", "ok": true, "durationMs": 889 }
+  ],
+  "result": {
+    "url": "https://pindown.io/en1",
+    "domain": "pindown.io",
+    "scrapedAt": "2026-11-03T11:16:09.373Z",
+    "meta": {
+      "title": "Pinterest Video Downloader - Download HD Pinterest Videos & GIFs Online",
+      "description": "Download Pinterest videos to your phone, PC, or tablet in the highest quality MP4 and HD resolution. Use our Pinterest downloader on any browser, Android or iOS.",
+      "keywords": "",
+      "author": "PinDown.io",
+      "generator": "",
+      "canonical": "https://pindown.io/en1",
+      "og": {
+        "title": "Pinterest Video Downloader - Download HD Pinterest Videos & GIFs Online",
+        "description": "Download Pinterest videos to your phone, PC, or tablet in the highest quality MP4 and HD resolution. Use our Pinterest downloader on any browser, Android or iOS.",
+        "image": "https://pindown.io/img/cover.png",
+        "type": "article",
+        "url": "https://pindown.io/en1"
+      },
+      "twitter": {
+        "card": "summary",
+        "title": "Pinterest Video Downloader - Download HD Pinterest Videos & GIFs Online",
+        "description": "Download Pinterest videos to your phone, PC, or tablet in the highest quality MP4 and HD resolution. Use our Pinterest downloader on any browser, Android or iOS.",
+        "image": "https://pindown.io/img/cover.png"
+      }
+    },
+    "title": "Pinterest Video Downloader - Download HD Pinterest Videos & GIFs Online",
+    "description": "Download Pinterest videos to your phone, PC, or tablet in the highest quality MP4 and HD resolution. Use our Pinterest downloader on any browser, Android or iOS.",
+    "structuredData": [],
+    "headings": [
+      { "level": 1, "text": "Pinterest Video Downloader" },
+      { "level": 2, "text": "Pinterest video download 1080p - 2K - 4K. Free. All devices" },
+      { "level": 2, "text": "Why You Should Use Our Pinterest Video Downloader" },
+      { "level": 2, "text": "How to Download Pinterest Video with Pindown.io" },
+      { "level": 2, "text": "PinDown.io - Best Pinterest Video Downloader" },
+      { "level": 2, "text": "Frequently Asked Questions" },
+      { "level": 3, "text": "1Find Videos" },
+      { "level": 3, "text": "2Paste Video" },
+      { "level": 3, "text": "3Download Video" },
+      { "level": 3, "text": "Pinterest video downloader with best formats 1080p - 2K - 4K for free" },
+      { "level": 3, "text": "How to download video from Pinterest?" },
+      { "level": 3, "text": "What makes PinDown.io the best Pinterest downloader?" },
+      { "level": 3, "text": "Why Use PinDown To Download Pinterest Video?" },
+      { "level": 3, "text": "How to download Pinterest videos to your computer?" },
+      { "level": 3, "text": "How to download Pinterest videos to Android?" },
+      { "level": 3, "text": "How to Download 4k Pinterest Videos?" },
+      { "level": 3, "text": "How to download Pinterest videos to your iPhone (iOS)?" },
+      { "level": 3, "text": "How to download Pinterest videos in MP4 format?" },
+      { "level": 3, "text": "Can I save Pinterest videos on my phone?" },
+      { "level": 3, "text": "Can I convert Pinterest videos to MP4?" },
+      { "level": 3, "text": "Do I need a Pinterest downloader app to save videos?" },
+      { "level": 3, "text": "Can I download Pinterest GIFs, images, or Idea Pins?" },
+      { "level": 3, "text": "Does PinDown.io store downloaded videos or keep a copy of the video?" },
+      { "level": 3, "text": "Do you have any questions to answer?" },
+      { "level": 4, "text": "Company" },
+      { "level": 4, "text": "Legal" },
+      { "level": 4, "text": "Downloaders" }
+    ],
+    "paragraphs": [
+      "ADVERTISEMENT",
+      "From Pinterest, Copy the Pinterest video URL by clicking Share and choosing Copy Video URL.",
+      "Paste the Pinterest video URL in the box above and hit the Download button.",
+      "Click on the video quality that you want to download (SD or HD or 1080).",
+      "PinDown.io is the best Pinterest video downloader to help you download high quality Pinterest video in Full HD, 2K, 4K without watermark.",
+      "Download Pinterest video to your phone, PC, or tablet with highest quality. Use our Pinterest video downloader with your browser. No need to install any software. Support both Android, and iOS.",
+      "Based on user reviews and feedback, PinDown.io is one of the fastest, most reliable, and highest-quality Pinterest Video Downloader tool at the moment. We are committed to helping you save videos from Pinterest quickly and in the best possible quality. Our tool is regularly updated to ensure a smooth and stable experience for all users.",
+      "On a computer, just copy the link of the Pinterest video, paste it into the input box at the top of this page, and click the Download button. You can download Pinterest videos in MP4 format with no watermark quickly and easily.",
+      "Just like downloading on a computer, it's very simple, go to PinDown.io -> Paste Pinterest Video Link -> And Click Download -> Choose the quality you want to download (Support to 4K Video)",
+      "You just need a 4K quality Pinterest video link. Copy the link -> Access PinDown.io -> Paste Pinterest Video Link -> And Press Download -> Choose the quality you 4K to download.",
+      "IOS is a little more complicated, because iOS does not support Live Video download, you need to download Documents by Readdle, Open the application, Choose browser -> Access PinDown.io -> Paste Pinterest Video Link -> And Click Download -> Select the quality you want to download.",
+      "With PinDown.io, saving Pinterest videos in MP4 is simple. Just copy the Pinterest video link, paste it into the input box at the top of this page, and choose MP4 from the available formats. Our Pinterest video downloader will convert the video automatically and generate a fast MP4 download link for your device.",
+      "Yes, you can use the PinDown Pinterest saver to download Pinterest videos on your Android or iPhone. Just copy the video link from Pinterest, paste it into the box on PinDown.io, and download the file in MP4, HD, or 4K. The saved video will appear in your device's Downloads folder. On iPhone, use the \"Save to Files\" option if required.",
+      "Yes. PinDown.io automatically converts Pinterest to MP4. Just copy the Pinterest video link, paste it into our downloader, and choose the MP4 option. The video will be processed in the highest quality available and saved as an MP4 file on any device.",
+      "No. You don't need to install any Pinterest downloader app. PinDown.io works directly in your browser and performs the same job as a Pinterest downloader app. Just paste the Pinterest video link and download in MP4, HD, or 4K instantly.",
+      "Yes. PinDown.io supports downloading all types of Pinterest media, including videos, images, animated GIFs, and Idea Pins. Just copy the link of the content you want to save and paste it into the downloader. PinDown will process the file in the highest quality available and provide a fast download link for your device.",
+      "Oh no, PinDown.io does not host videos nor keep copies of downloaded videos. All videos are stored on Pinterest's servers and only downloaded to your device.",
+      "ADVERTISEMENT"
+    ],
+    "links": [
+      { "url": "https://pindown.io/en1", "text": "PinDown" },
+      { "url": "https://pindown.io/en/pinterest-image-downloader", "text": "Pinterest Image Downloader" },
+      { "url": "https://pindown.io/pinterest-gif-downloader", "text": "Pinterest GIF Downloader" },
+      { "url": "https://pindown.io/pinterest-private-downloader", "text": "Pinterest Private Downloader" },
+      { "url": "https://pindown.io/how-to-download-pinterest-videos", "text": "How to use Pinterest video downloader - PinDown?" },
+      { "url": "https://chromewebstore.google.com/detail/pindown-pinterest-downloa/kipfdogpjceciknfbieoollekhahhbeo", "text": "Chrome Extension" },
+      { "url": "https://pindown.io/id2", "text": "Bahasa Indonesia" },
+      { "url": "https://pindown.io/vn1", "text": "Tiếng Việt" },
+      { "url": "https://pindown.io/ms1", "text": "Bahasa Malaysia" },
+      { "url": "https://pindown.io/jw1", "text": "Basa Jawa" },
+      { "url": "https://pindown.io/cs1", "text": "Czech" },
+      { "url": "https://pindown.io/es2", "text": "Español" },
+      { "url": "https://pindown.io/fr2", "text": "Français" },
+      { "url": "https://pindown.io/de1", "text": "German" },
+      { "url": "https://pindown.io/el", "text": "Greek" },
+      { "url": "https://pindown.io/hu1", "text": "Hungary" },
+      { "url": "https://pindown.io/it2", "text": "Italian" },
+      { "url": "https://pindown.io/nl", "text": "Nederlands" },
+      { "url": "https://pindown.io/pl1", "text": "Polish" },
+      { "url": "https://pindown.io/pt2", "text": "Português" },
+      { "url": "https://pindown.io/ro1", "text": "Romanian" },
+      { "url": "https://pindown.io/th1", "text": "Thai" },
+      { "url": "https://pindown.io/tr1", "text": "Turkish" },
+      { "url": "https://pindown.io/uk1", "text": "Ukrainian" },
+      { "url": "https://pindown.io/ru1", "text": "Русский" },
+      { "url": "https://pindown.io/hi1", "text": "हिंदी" },
+      { "url": "https://pindown.io/ko1", "text": "한국어" },
+      { "url": "https://pindown.io/zh-cn1", "text": "中文(简体)" },
+      { "url": "https://pindown.io/tw-tw1", "text": "中文(繁體) - TAIWAN" },
+      { "url": "https://pindown.io/ja1", "text": "日本語" },
+      { "url": "https://pindown.io/ar1", "text": "عربي" },
+      { "url": "https://www.pinterest.com/", "text": "Pinterest" },
+      { "url": "https://youtu.be/iVhRBA9tkHA", "text": "Watch Video Tutorial" },
+      { "url": "https://apps.apple.com/us/app/documents-by-readdle/id364901807", "text": "Documents by Readdle" },
+      { "url": "https://pindown.io/contact.html", "text": "here" },
+      { "url": "https://pindown.io/about-us", "text": "About Us" },
+      { "url": "https://pindown.io/blog", "text": "Blog" },
+      { "url": "https://pindown.io/terms-of-service.html", "text": "Terms of Service" },
+      { "url": "https://pindown.io/privacy-policy.html", "text": "Privacy Policy" },
+      { "url": "https://tmate.cc/", "text": "TikTok Downloader" },
+      { "url": "https://threadsmate.net/", "text": "Threads Video Downloader" }
+    ],
+    "images": [],
+    "tables": [],
+    "stats": { "headings": 27, "paragraphs": 18, "links": 41, "images": 0, "tables": 0, "custom": 0 }
+  }
+};
+  </script>
+
+  <!-- ==== RENDER LOGIC ==== -->
+  <script>
+  (function () {
+    'use strict';
+    const payload = scrapedData;
+    const d = payload.result || payload;
+
+    document.getElementById('subtitle').textContent =
+      (d.domain || 'unknown') + ' · ' + (d.meta?.title || 'Tanpa judul');
+
+    // Stats
+    const s = d.stats || {};
+    const statsList = [
+      ['Heading', s.headings || 0],
+      ['Paragraf', s.paragraphs || 0],
+      ['Link', s.links || 0],
+      ['Gambar', s.images || 0],
+      ['Tabel', s.tables || 0],
+      ['Custom', s.custom || 0]
+    ];
+    document.getElementById('stats').innerHTML = statsList.map(
+      ([label, val]) => '<div class="stat"><b>' + val + '</b><span>' + label + '</span></div>'
+    ).join('');
+
+    // Tabs
+    const tabs = [
+      { id: 'meta', label: 'Meta' },
+      { id: 'headings', label: 'Headings' },
+      { id: 'paragraphs', label: 'Paragraf' },
+      { id: 'links', label: 'Links' },
+      { id: 'images', label: 'Gambar' },
+      { id: 'tables', label: 'Tabel' },
+      { id: 'raw', label: 'Raw Text' },
+      { id: 'json', label: 'JSON' }
+    ];
+    const tabsEl = document.getElementById('tabs');
+    tabsEl.innerHTML = tabs.map((t, i) =>
+      '<button class="tab' + (i === 0 ? ' active' : '') + '" data-tab="' + t.id + '">' + t.label + '</button>'
+    ).join('');
+
+    const content = document.getElementById('content');
+
+    function esc(v) {
+      if (v === null || v === undefined) return '';
+      return String(v)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function render(tabId) {
+      switch (tabId) {
+        case 'meta':       content.innerHTML = renderMeta(d); break;
+        case 'headings':   content.innerHTML = renderHeadings(d.headings || []); break;
+        case 'paragraphs': content.innerHTML = renderParagraphs(d.paragraphs || []); break;
+        case 'links':      content.innerHTML = renderLinks(d.links || []); break;
+        case 'images':     content.innerHTML = renderImages(d.images || []); break;
+        case 'tables':     content.innerHTML = renderTables(d.tables || []); break;
+        case 'raw':        content.innerHTML = renderRaw(d.rawText || ''); break;
+        case 'json':       content.innerHTML = renderJson(payload); break;
+      }
+    }
+
+    function renderMeta(d) {
+      const m = d.meta || {};
+      const rows = [
+        ['URL', d.url],
+        ['Domain', d.domain],
+        ['Title', d.title || m.title],
+        ['Description', d.description || m.description],
+        ['Author', m.author],
+        ['Keywords', m.keywords],
+        ['Canonical', m.canonical],
+        ['OG Title', m.og && m.og.title],
+        ['OG Image', m.og && m.og.image],
+        ['OG Type', m.og && m.og.type],
+        ['Twitter Card', m.twitter && m.twitter.card],
+        ['Structured Data', (d.structuredData && d.structuredData.length) ? d.structuredData.length + ' entri' : null],
+        ['Scraped At', d.scrapedAt],
+        ['Engine', payload.engine],
+        ['Waktu Scrape', payload.time],
+        ['Proxy Dipakai', payload.proxyUsed]
+      ].filter(r => r[1] !== undefined && r[1] !== null && r[1] !== '');
+
+      return '<div class="kv">' + rows.map(r =>
+        '<div class="row">' +
+          '<div class="k">' + esc(r[0]) + '</div>' +
+          '<div class="v">' + esc(r[1]) + '</div>' +
+        '</div>'
+      ).join('') + '</div>';
+    }
+
+    function renderHeadings(hs) {
+      if (!hs.length) return '<div class="empty">Tidak ada heading.</div>';
+      return hs.map(h =>
+        '<div class="item"><span class="badge">H' + h.level + '</span>' + esc(h.text) + '</div>'
+      ).join('');
+    }
+
+    function renderParagraphs(ps) {
+      if (!ps.length) return '<div class="empty">Tidak ada paragraf.</div>';
+      return ps.map(p => '<div class="item">' + esc(p) + '</div>').join('');
+    }
+
+    function renderLinks(ls) {
+      if (!ls.length) return '<div class="empty">Tidak ada link.</div>';
+      return ls.map(l =>
+        '<div class="item">' +
+          '<a href="' + esc(l.url) + '" target="_blank" rel="noopener">' +
+            esc(l.text || '(tanpa teks)') +
+          '</a><br>' +
+          '<small style="color:var(--gray-500);word-break:break-all;font-size:11px">' + esc(l.url) + '</small>' +
+        '</div>'
+      ).join('');
+    }
+
+    function renderImages(ims) {
+      if (!ims.length) return '<div class="empty">Tidak ada gambar.</div>';
+      return ims.map(i =>
+        '<div class="item">' +
+          '<b>' + esc(i.alt || '(tanpa alt)') + '</b><br>' +
+          '<small style="color:var(--gray-500);word-break:break-all;font-size:11px">' + esc(i.url) + '</small>' +
+        '</div>'
+      ).join('');
+    }
+
+    function renderTables(ts) {
+      if (!ts.length) return '<div class="empty">Tidak ada tabel.</div>';
+      return ts.map(t =>
+        '<div class="item">' +
+          '<b>Tabel #' + (t.index + 1) + '</b>' +
+          (t.caption ? ' — ' + esc(t.caption) : '') +
+          '<br><small>' + t.rows.length + ' baris · ' + t.headers.length + ' kolom</small>' +
+        '</div>'
+      ).join('');
+    }
+
+    function renderRaw(txt) {
+      if (!txt) return '<div class="empty">Tidak ada raw text.</div>';
+      return '<div class="section-title">Raw Text (' + txt.length + ' karakter)</div>' +
+        '<div class="item" style="max-height:520px;overflow-y:auto;white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace;font-size:12px;line-height:1.6;">' +
+          esc(txt) +
+        '</div>';
+    }
+
+    function renderJson(obj) {
+      return '<pre>' + esc(JSON.stringify(obj, null, 2)) + '</pre>';
+    }
+
+    tabsEl.addEventListener('click', function (e) {
+      const btn = e.target.closest('.tab');
+      if (!btn) return;
+      tabsEl.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      render(btn.dataset.tab);
+    });
+
+    render('meta');
+  })();
+  </script>
+</body>
+</html>
